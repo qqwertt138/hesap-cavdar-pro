@@ -1,0 +1,10 @@
+HESAP ÇAVDAR PRO - KURULUM (Android)
+
+1) Telefonda Chrome'u açın, app.netlify.com/drop adresine gidin (ücretsiz, hesap açmadan deneyebilirsiniz).
+2) "Browse to upload" ile bu ZIP dosyasını (veya açılmış klasörü) yükleyin.
+3) Size bir adres verir (ör. xxxx.netlify.app). Chrome'da o adresi açın.
+4) Chrome menüsü (⋮) > "Uygulamayı yükle" / "Ana ekrana ekle" deyin.
+5) Artık ana ekranda Hesap Çavdar Pro ikonu olur, internetsiz de çalışır.
+
+ÖNEMLİ: Verileriniz telefonda saklanır. Düzenli olarak "Yedek" sekmesinden yedek alın.
+Aynı adresten açtığınız sürece kayıtlar silinmez. Chrome'un "site verilerini temizle" işlemini yapmayın.
