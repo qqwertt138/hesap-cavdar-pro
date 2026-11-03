@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yönetim Paneli</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#07122b;color:#fff;font-family:system-ui,Roboto,Arial,sans-serif;padding-bottom:40px}
+header{background:#0f2247;border-bottom:2px solid #ff8a00;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}header small{color:#9fb1d1;font-size:12px}
+main{max-width:720px;margin:auto;padding:12px}.card{background:#0f2247;border-radius:14px;padding:14px;margin-bottom:12px}h3{margin:0 0 10px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.s{background:#183466;border-radius:12px;padding:10px;border-left:4px solid #ff8a00}.s small{color:#9fb1d1}.s b{display:block;font-size:24px;color:#ff8a00}
+input{width:100%;background:#0a1a3a;color:#fff;border:1px solid #2b4a85;border-radius:10px;padding:11px;font-size:16px;margin:4px 0}
+button{background:#ff8a00;color:#1a0f00;border:0;border-radius:10px;padding:10px 12px;font-weight:700;font-size:14px;margin:3px 3px 0 0}button.a{background:#183466;color:#fff}button.r{background:#b3261e;color:#fff}
+.u{border-bottom:1px solid #223c70;padding:10px 0}.u:last-child{border:0}.u small{color:#9fb1d1;display:block}.ok{color:#6fe39a}.no{color:#ff6b6b}.w{color:#ffb347}</style></head><body>
+<header><b>Hesap Çavdar Pro · Yönetim</b><span><small id="me"></small> <button class="a" id="out" hidden>Çıkış</button></span></header>
+<main id="app"><div class="card"><button id="login">Google ile giriş yap</button><p id="err" class="no"></p></div></main>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getFirestore,collection,getDocs,doc,getDoc,setDoc,updateDoc,deleteDoc,writeBatch}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const app=initializeApp({apiKey:'AIzaSyA2wFFLuPIv2h6mnNLxvYjinqMDDBnxdVQ',authDomain:'hesapcavdarpro.firebaseapp.com',projectId:'hesapcavdarpro'}),au=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s),D=864e5;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fd=t=>t?new Date(t).toLocaleDateString('tr-TR'):'-';
+let U=[],C={paid:false,trialDays:14,msg:'',contact:''},q='';
+$('#login').onclick=()=>signInWithPopup(au,new GoogleAuthProvider()).catch(e=>$('#err').textContent=e.message);
+$('#out').onclick=()=>signOut(au);
+onAuthStateChanged(au,u=>{$('#me').textContent=u?u.email:'';$('#out').hidden=!u;if(u)load();else{$('#app').innerHTML='<div class="card"><button id="login2">Google ile giriş yap</button></div>';$('#login2').onclick=()=>$('#login').click()}});
+async function load(){try{const s=await getDocs(collection(db,'users'));U=s.docs.map(d=>({k:d.id,...d.data()}));const c=await getDoc(doc(db,'config','app'));if(c.exists())C={...C,...c.data()};draw()}catch(e){$('#app').innerHTML='<div class="card no">Yetki yok veya hata: '+esc(e.message)+'<br><br>Firestore kurallarındaki e-posta adresinin bu hesapla aynı olduğundan emin olun.</div>'}}
+function draw(){const n=Date.now(),act=U.filter(u=>n-u.lastSeen<7*D).length,exp=U.filter(u=>u.expiresAt<n).length,soon=U.filter(u=>u.expiresAt>=n&&u.expiresAt-n<7*D).length,bl=U.filter(u=>u.blocked).length;
+const L=U.filter(u=>(u.name+u.phone+u.city+u.id).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.createdAt-a.createdAt);
+$('#app').innerHTML=`<div class="g"><div class="s"><small>Toplam kullanıcı</small><b>${U.length}</b></div><div class="s"><small>Son 7 gün aktif</small><b>${act}</b></div><div class="s"><small>Süresi dolan</small><b>${exp}</b></div><div class="s"><small>7 günden az kalan</small><b>${soon}</b></div><div class="s"><small>Engelli</small><b>${bl}</b></div></div>
+<div class="card" style="margin-top:12px"><h3>Ücretli dönem: <span class="${C.paid?'ok':'w'}">${C.paid?'AÇIK':'KAPALI (herkes ücretsiz)'}</span></h3>
+<small>Deneme süresi (gün)</small><input id="td" type="number" value="${C.trialDays}"><small>Süre doldu/askı ekranındaki mesaj</small><input id="ms" value="${esc(C.msg)}"><small>İletişim (telefon/WhatsApp)</small><input id="ct" value="${esc(C.contact)}">
+<button data-x="cfg">Ayarları kaydet</button>${C.paid?'<button class="r" data-x="free">Ücretsiz moda dön</button>':'<button class="r" data-x="paid">Ücretli dönemi başlat</button>'}<p style="font-size:12px;color:#9fb1d1">Başlatınca bitmiş veya az kalan herkese deneme süresi kadar gün tanımlanır.</p></div>
+<div class="card"><h3>Kullanıcılar (${L.length})</h3><input id="sq" placeholder="Ara: ad, telefon, ID" value="${esc(q)}">${L.map(u=>{const d=Math.ceil((u.expiresAt-n)/D);return `<div class="u"><b>${esc(u.name||'(isimsiz)')}</b> · ${esc(u.id)}<small>${esc(u.phone)} ${esc(u.city)}</small><small>Kayıt: ${fd(u.createdAt)} · Son: ${fd(u.lastSeen)} · v${u.ver||0}</small><small class="${u.blocked?'no':d>0?'ok':'no'}">${u.blocked?'ENGELLİ':d>0?'Kalan: '+d+' gün':'Süresi doldu'}</small>
+<button data-x="add" data-d="30" data-k="${u.k}">+30 gün</button><button data-x="add" data-d="90" data-k="${u.k}">+90</button><button class="a" data-x="addn" data-k="${u.k}">Gün ekle</button><button class="a" data-x="end" data-k="${u.k}">Süreyi bitir</button><button class="a" data-x="blk" data-k="${u.k}">${u.blocked?'Engeli kaldır':'Engelle'}</button><button class="r" data-x="del" data-k="${u.k}">Sil</button></div>`}).join('')||'<p>Kullanıcı yok.</p>'}</div>`;
+$('#sq').oninput=e=>{q=e.target.value;const p=e.target.selectionStart;draw();const i=$('#sq');i.focus();i.setSelectionRange(p,p)}}
+const g=k=>U.find(u=>u.k==k);
+async function cfgSave(extra){C={...C,trialDays:+$('#td').value||14,msg:$('#ms').value,contact:$('#ct').value,...extra};await setDoc(doc(db,'config','app'),C,{merge:true})}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!b)return;const x=b.dataset.x,k=b.dataset.k,u=k&&g(k),n=Date.now();try{
+if(x=='cfg'){await cfgSave({});alert('Kaydedildi')}
+else if(x=='paid'){if(!confirm('Ücretli dönem başlasın mı? Süresi bitmiş veya az kalan herkese '+(+$('#td').value||14)+' gün deneme tanımlanır.'))return;await cfgSave({paid:true});const t=n+C.trialDays*D,L=U.filter(u=>u.expiresAt<t);for(let i=0;i<L.length;i+=400){const w=writeBatch(db);L.slice(i,i+400).forEach(u=>w.update(doc(db,'users',u.k),{expiresAt:t}));await w.commit()}}
+else if(x=='free'){await cfgSave({paid:false})}
+else if(x=='add'||x=='addn'){const d=x=='add'?+b.dataset.d:+prompt('Kaç gün eklensin?','30');if(!d)return;await updateDoc(doc(db,'users',k),{expiresAt:Math.round(Math.max(u.expiresAt,n)+d*D)})}
+else if(x=='end'){await updateDoc(doc(db,'users',k),{expiresAt:n})}
+else if(x=='blk'){await updateDoc(doc(db,'users',k),{blocked:!u.blocked})}
+else if(x=='del'){if(!confirm('Kullanıcı kaydı silinsin mi?'))return;await deleteDoc(doc(db,'users',k))}
+await load()}catch(er){alert('Hata: '+er.message)}});
+</script></body></html>
