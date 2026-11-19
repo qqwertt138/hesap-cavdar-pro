@@ -15,9 +15,9 @@ import{getFirestore,collection,getDocs,doc,getDoc,setDoc,updateDoc,deleteDoc,wri
 const app=initializeApp({apiKey:'AIzaSyA2wFFLuPIv2h6mnNLxvYjinqMDDBnxdVQ',authDomain:'hesapcavdarpro.firebaseapp.com',projectId:'hesapcavdarpro'}),au=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s),D=864e5;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fd=t=>t?new Date(t).toLocaleDateString('tr-TR'):'-';
 let U=[],C={paid:false,trialDays:14,msg:'',contact:''},q='';
-$('#login').onclick=()=>signInWithPopup(au,new GoogleAuthProvider()).catch(e=>$('#err').textContent=e.message);
+const login=()=>signInWithPopup(au,new GoogleAuthProvider()).catch(e=>alert('Giriş hatası: '+e.message));$('#login').onclick=login;
 $('#out').onclick=()=>signOut(au);
-onAuthStateChanged(au,u=>{$('#me').textContent=u?u.email:'';$('#out').hidden=!u;if(u)load();else{$('#app').innerHTML='<div class="card"><button id="login2">Google ile giriş yap</button></div>';$('#login2').onclick=()=>$('#login').click()}});
+onAuthStateChanged(au,u=>{$('#me').textContent=u?u.email:'';$('#out').hidden=!u;if(u)load();else{$('#app').innerHTML='<div class="card"><button id="login2">Google ile giriş yap</button></div>';$('#login2').onclick=login}});
 async function load(){try{const s=await getDocs(collection(db,'users'));U=s.docs.map(d=>({k:d.id,...d.data()}));const c=await getDoc(doc(db,'config','app'));if(c.exists())C={...C,...c.data()};draw()}catch(e){$('#app').innerHTML='<div class="card no">Yetki yok veya hata: '+esc(e.message)+'<br><br>Firestore kurallarındaki e-posta adresinin bu hesapla aynı olduğundan emin olun.</div>'}}
 function draw(){const n=Date.now(),act=U.filter(u=>n-u.lastSeen<7*D).length,exp=U.filter(u=>u.expiresAt<n).length,soon=U.filter(u=>u.expiresAt>=n&&u.expiresAt-n<7*D).length,bl=U.filter(u=>u.blocked).length;
 const L=U.filter(u=>(u.name+u.phone+u.city+u.id).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>b.createdAt-a.createdAt);
